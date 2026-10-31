@@ -1,0 +1,37 @@
+{
+  "user_id": "demo_student",
+  "today": "2026-10-28",
+  "interests": [
+    "sql"
+  ],
+  "tasks": [
+    {
+      "id": "task_econ",
+      "user_id": "demo_student",
+      "title": "Economics reading",
+      "due_date": "2026-11-02",
+      "completed": false
+    },
+    {
+      "id": "task_calc",
+      "user_id": "demo_student",
+      "title": "Calculus homework",
+      "due_date": "2026-10-30",
+      "completed": false
+    }
+  ],
+  "retrieved_notes": [
+    {
+      "id": "note_calc",
+      "user_id": "demo_student",
+      "title": "Calculus: derivative rules",
+      "excerpt": "Calculus notes: use the power rule to differentiate powers of x."
+    },
+    {
+      "id": "note_econ",
+      "user_id": "demo_student",
+      "title": "Economics: supply and demand",
+      "excerpt": "Economics notes on shifts in supply and demand."
+    }
+  ]
+}

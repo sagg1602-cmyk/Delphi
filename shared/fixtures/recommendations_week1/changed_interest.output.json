@@ -1,0 +1,21 @@
+[
+  {
+    "type": "study",
+    "title": "Work on Calculus homework",
+    "reason": "This task is due in 2 days (2026-10-30). It has the earliest deadline among your unfinished dated tasks. The note \"Calculus: derivative rules\" shares a topic keyword with this task.",
+    "evidence_ids": [
+      "task_calc",
+      "note_calc"
+    ],
+    "action_target": "task_calc"
+  },
+  {
+    "type": "discovery",
+    "title": "Explore PostgreSQL Tutorial",
+    "reason": "This catalog resource matches your stated interest in sql.",
+    "evidence_ids": [
+      "resource_postgresql_tutorial"
+    ],
+    "action_target": "https://www.postgresql.org/docs/current/tutorial.html"
+  }
+]
