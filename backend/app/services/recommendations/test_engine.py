@@ -1,132 +1,145 @@
-"""Behavior checks for the small Week 1 prototype; standard-library unittest."""
+"""Week 2 scenario and evidence tests. No database required."""
 
-import copy
 import json
 import unittest
+from copy import deepcopy
+from pathlib import Path
 
-from engine import FIXTURE_DIR, SAMPLE_CATALOG, generate_recommendations
+from backend.app.services.recommendations.engine import (
+    generate_recommendations,
+    validate_evidence,
+)
 
-
-def fixture(name="due_task"):
-    return json.loads((FIXTURE_DIR / f"{name}.input.json").read_text())
+FIXTURES = Path(__file__).resolve().parents[4] / "shared" / "fixtures"
 
 
 class RecommendationTests(unittest.TestCase):
-    def test_earliest_deadline_wins_instead_of_first_task(self):
-        result = generate_recommendations(fixture())
-        self.assertEqual(result[0]["action_target"], "task_calc")
-        self.assertIn("due in 2 days (2026-10-30)", result[0]["reason"])
+    def setUp(self):
+        self.context = json.loads(
+            (FIXTURES / "recommendations_week2.input.json").read_text()
+        )
 
-    def test_completed_task_is_not_recommended(self):
-        context = fixture()
-        context["tasks"][1]["completed"] = True
-        result = generate_recommendations(context)
-        self.assertEqual(result[0]["action_target"], "task_econ")
+    def generate(self):
+        return generate_recommendations(self.context)
 
-    def test_tasks_without_deadlines_are_omitted_in_week_one(self):
-        context = fixture()
-        context["tasks"] = [dict(context["tasks"][0], due_date=None)]
-        self.assertEqual([r["type"] for r in generate_recommendations(context)], ["discovery"])
+    def test_due_task_produces_study_and_discovery(self):
+        result = self.generate()
+        self.assertEqual(
+            [item["type"] for item in result],
+            ["study", "discovery"],
+        )
+        self.assertEqual(result[0]["action"]["target"], "task_calc")
 
-    def test_overdue_and_due_today_reasons_are_accurate(self):
-        for due, expected in [("2026-10-27", "is overdue"), ("2026-10-28", "due today")]:
-            with self.subTest(due=due):
-                context = fixture()
-                context["tasks"][1]["due_date"] = due
-                self.assertIn(expected, generate_recommendations(context)[0]["reason"])
-
-    def test_equal_deadlines_have_a_stable_tie_break(self):
-        context = fixture()
-        context["tasks"][0]["due_date"] = "2026-10-30"
-        first = generate_recommendations(context)
-        context["tasks"].reverse()
-        self.assertEqual(first, generate_recommendations(context))
-
-    def test_only_related_note_is_cited(self):
-        result = generate_recommendations(fixture())
-        self.assertEqual(result[0]["evidence_ids"], ["task_calc", "note_calc"])
-
-    def test_notes_are_optional(self):
-        context = fixture()
-        del context["retrieved_notes"]
-        study = generate_recommendations(context)[0]
-        self.assertEqual(study["evidence_ids"], ["task_calc"])
-        self.assertNotIn("note", study["reason"].lower())
-
-    def test_foreign_user_tasks_and_notes_are_not_cited(self):
-        context = fixture()
-        context["tasks"].insert(0, {
-            "id": "foreign_task", "user_id": "someone_else", "title": "Private task",
-            "due_date": "2026-01-01", "completed": False,
+    def test_changed_interest_changes_discovery(self):
+        self.context["interests"][0]["name"] = "SQL"
+        self.context["catalog"].append({
+            "id": "resource_sql",
+            "title": "PostgreSQL Tutorial",
+            "tags": ["sql"],
+            "url": "https://www.postgresql.org/docs/current/tutorial.html",
         })
-        context["retrieved_notes"][0]["user_id"] = "someone_else"
-        study = generate_recommendations(context)[0]
-        self.assertEqual(study["evidence_ids"], ["task_calc"])
+        discovery = self.generate()[1]
+        self.assertEqual(discovery["id"], "discovery-resource_sql")
 
-    def test_changed_interest_changes_only_discovery(self):
-        before = generate_recommendations(fixture())
-        after = generate_recommendations(fixture("changed_interest"))
-        self.assertEqual(before[0], after[0])
-        self.assertEqual(before[1]["evidence_ids"], ["resource_python_tutorial"])
-        self.assertEqual(after[1]["evidence_ids"], ["resource_postgresql_tutorial"])
+    def test_empty_user_gets_no_recommendations(self):
+        self.context["tasks"] = []
+        self.context["interests"] = []
+        self.context["retrieved_notes"] = []
+        self.assertEqual(self.generate(), [])
 
-    def test_interest_matching_ignores_case_and_outer_spaces(self):
-        context = fixture()
-        context["interests"] = ["  PYTHON  "]
-        self.assertEqual(generate_recommendations(context)[1]["evidence_ids"],
-                         ["resource_python_tutorial"])
+    def test_completed_task_is_excluded(self):
+        self.context["tasks"][0]["status"] = "done"
+        self.assertEqual(
+            [item["type"] for item in self.generate()], ["discovery"]
+        )
 
-    def test_unmatched_interest_does_not_invent_a_resource(self):
-        context = fixture()
-        context["interests"] = ["astronomy"]
-        self.assertEqual([r["type"] for r in generate_recommendations(context)], ["study"])
+    def test_cancelled_task_is_excluded(self):
+        self.context["tasks"][0]["status"] = "cancelled"
+        self.assertEqual(
+            [item["type"] for item in self.generate()], ["discovery"]
+        )
 
-    def test_empty_catalog_is_respected(self):
-        self.assertEqual([r["type"] for r in generate_recommendations(fixture(), catalog=[])],
-                         ["study"])
+    def test_deactivated_interest_is_excluded(self):
+        self.context["interests"][0]["active"] = False
+        self.assertEqual(
+            [item["type"] for item in self.generate()], ["study"]
+        )
 
-    def test_no_context_returns_empty_list(self):
-        self.assertEqual(generate_recommendations(fixture("no_context")), [])
+    def test_no_notes_still_produces_study(self):
+        self.context["retrieved_notes"] = []
+        study = self.generate()[0]
+        self.assertEqual(study["type"], "study")
+        self.assertEqual(
+            [item["type"] for item in study["evidence"]], ["task"]
+        )
 
-    def test_output_uses_real_input_or_catalog_evidence(self):
-        context = fixture()
-        known_ids = {record["id"] for record in context["tasks"] + context["retrieved_notes"]}
-        known_ids.update(resource["id"] for resource in SAMPLE_CATALOG)
-        for recommendation in generate_recommendations(context):
-            self.assertEqual(set(recommendation),
-                             {"type", "title", "reason", "evidence_ids", "action_target"})
-            self.assertTrue(set(recommendation["evidence_ids"]).issubset(known_ids))
-            self.assertTrue(recommendation["evidence_ids"])
-            if recommendation["type"] == "discovery":
-                self.assertIn(recommendation["action_target"],
-                              {resource["url"] for resource in SAMPLE_CATALOG})
+    def test_no_tasks_produces_discovery_only(self):
+        self.context["tasks"] = []
+        self.assertEqual(
+            [item["type"] for item in self.generate()], ["discovery"]
+        )
 
-    def test_same_input_is_repeatable_and_is_not_mutated(self):
-        context = fixture()
-        original = copy.deepcopy(context)
-        first = generate_recommendations(context)
-        self.assertEqual(first, generate_recommendations(context))
-        self.assertEqual(context, original)
+    def test_unmatched_resource_is_excluded(self):
+        self.context["catalog"][0]["tags"] = ["biology"]
+        self.assertEqual(
+            [item["type"] for item in self.generate()], ["study"]
+        )
 
-    def test_invalid_date_has_an_understandable_error(self):
-        for value in ("2026-02-30", "tomorrow", "20261030"):
-            with self.subTest(value=value):
-                context = fixture()
-                context["tasks"][1]["due_date"] = value
-                with self.assertRaisesRegex(ValueError, "date"):
-                    generate_recommendations(context)
+    def test_evidence_ids_are_present_in_input(self):
+        allowed = {
+            (kind, type(record["id"]), record["id"])
+            for kind, field in [
+                ("task", "tasks"),
+                ("note", "retrieved_notes"),
+                ("interest", "interests"),
+                ("resource", "catalog"),
+            ]
+            for record in self.context[field]
+        }
+        for recommendation in self.generate():
+            for item in recommendation["evidence"]:
+                self.assertIn(
+                    (item["type"], type(item["id"]), item["id"]),
+                    allowed,
+                )
 
-    def test_invalid_completion_flag_is_rejected(self):
-        context = fixture()
-        context["tasks"][1]["completed"] = "false"
-        with self.assertRaisesRegex(ValueError, "completed"):
-            generate_recommendations(context)
+    def test_invented_evidence_is_rejected(self):
+        result = self.generate()
+        result[0]["evidence"][0]["id"] = "invented"
+        with self.assertRaises(ValueError):
+            validate_evidence(result, self.context)
 
-    def test_saved_output_fixtures_match_the_engine(self):
-        for name in ("due_task", "changed_interest", "no_context"):
-            with self.subTest(name=name):
-                expected = json.loads((FIXTURE_DIR / f"{name}.output.json").read_text())
-                self.assertEqual(generate_recommendations(fixture(name)), expected)
+    def test_changed_resource_url_is_rejected(self):
+        result = self.generate()
+        result[1]["action"]["target"] = "https://example.com/invented"
+        with self.assertRaises(ValueError):
+            validate_evidence(result, self.context)
+
+    def test_other_users_data_is_excluded(self):
+        for field in ("tasks", "interests", "retrieved_notes"):
+            for record in self.context[field]:
+                record["user_id"] = 999
+        self.assertEqual(self.generate(), [])
+
+    def test_numeric_database_ids_are_supported(self):
+        self.context["tasks"][0]["id"] = 12
+        result = self.generate()
+        self.assertEqual(result[0]["action"]["target"], 12)
+        self.assertEqual(result[0]["evidence"][0]["id"], 12)
+
+    def test_generation_does_not_modify_input(self):
+        original = deepcopy(self.context)
+        first = self.generate()
+        self.assertEqual(self.context, original)
+        self.assertEqual(first, self.generate())
+
+    def test_output_matches_shared_fixture(self):
+        expected = json.loads(
+            (FIXTURES / "recommendations_week2.output.json").read_text()
+        )
+        self.assertEqual(
+            {"recommendations": self.generate()}, expected
+        )
 
 
 if __name__ == "__main__":

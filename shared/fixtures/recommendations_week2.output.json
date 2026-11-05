@@ -1,0 +1,50 @@
+{
+  "recommendations": [
+    {
+      "id": "study-task_calc",
+      "type": "study",
+      "title": "Work on Calculus homework",
+      "reason": "Calculus homework is due in 2 day(s). Your note \"Calculus: derivative rules\" shares topic keywords and may help you get started.",
+      "estimated_minutes": 25,
+      "evidence": [
+        {
+          "type": "task",
+          "id": "task_calc",
+          "label": "Calculus homework"
+        },
+        {
+          "type": "note",
+          "id": "note_calc",
+          "label": "Calculus: derivative rules"
+        }
+      ],
+      "action": {
+        "type": "open_task",
+        "target": "task_calc"
+      }
+    },
+    {
+      "id": "discovery-resource_python_tutorial",
+      "type": "discovery",
+      "title": "Explore The Python Tutorial",
+      "reason": "This catalog resource matches your active interests: Python.",
+      "estimated_minutes": 15,
+      "evidence": [
+        {
+          "type": "interest",
+          "id": "interest_python",
+          "label": "Python"
+        },
+        {
+          "type": "resource",
+          "id": "resource_python_tutorial",
+          "label": "The Python Tutorial"
+        }
+      ],
+      "action": {
+        "type": "open_url",
+        "target": "https://docs.python.org/3/tutorial/"
+      }
+    }
+  ]
+}
