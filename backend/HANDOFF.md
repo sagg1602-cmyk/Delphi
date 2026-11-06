@@ -202,12 +202,12 @@ The warning says Starlette would prefer the `httpx2` package. The tests use `htt
 
 `tasks`: `id`, `user_id`, `title`, `due_date`, `status`, `created_at`, `updated_at`. Index `idx_tasks_user` on `user_id`.
 
-`status` may be `todo` or `done`. That list lives in `TaskStatus` in `models.py`. There is no database CHECK, so adding a status later is a code change. On insert, `updated_at` equals `created_at`. Lists come back newest first (`created_at` descending, then `id` descending), as plain arrays, for the dev user only.
+`status` may be `todo` or `done`. That list lives in `TaskStatus` in `app/schemas/models.py`. There is no database CHECK, so adding a status later is a code change. On insert, `updated_at` equals `created_at`. Lists come back newest first (`created_at` descending, then `id` descending), as plain arrays, for the dev user only.
 
 ## Assumptions and what is left
 
-- Manny's repo has empty `backend/app/` folders and no agreed JSON fixture, so route and field names follow this contract. His `.gitkeep` files were not changed. The runnable modules stay flat in `backend/`.
-- Clients never send `user_id`. `get_current_user_id()` supplies `1`.
+- Routes live in `backend/app/api/`. Queries live in `backend/app/repositories/`. Request and response models live in `backend/app/schemas/models.py`. The engine lives in `backend/app/core/database.py`. `backend/main.py` and `backend/database.py` are the run commands and call those modules. Tables are still created from `schema.sql`.
+- Clients never send `user_id`. `get_current_user_id()` in `app/core/database.py` supplies `1`.
 - CORS allows only `http://localhost:3000`. Allowed methods include GET, POST, PATCH, and DELETE so a later edit route does not need a CORS change. PATCH and DELETE routes are not implemented.
 - A total count, if we ever need one, belongs in a response header. List bodies stay arrays.
 

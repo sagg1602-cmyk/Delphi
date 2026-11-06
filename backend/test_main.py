@@ -9,8 +9,8 @@ from fastapi.testclient import TestClient
 from sqlalchemy import text
 from sqlalchemy.engine import Engine, make_url
 
-from database import init_schema, make_engine
-from main import create_app
+from app.core.database import init_schema, make_engine
+from app.main import create_app
 
 BACKEND_DIR = Path(__file__).resolve().parent
 
