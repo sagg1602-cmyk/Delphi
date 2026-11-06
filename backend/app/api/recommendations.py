@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, HTTPException, Request
 
-from database import get_current_user_id
+from app.api.deps import get_current_user_id
 from app.schemas.recommendations import GenerateRecommendationsResponse
 from app.services.recommendations.context import build_user_context
 from app.services.recommendations.engine import generate_recommendations

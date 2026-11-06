@@ -2,10 +2,10 @@
 
 from sqlalchemy import text
 
-from app.core.database import init_schema, make_engine
+from app.core.database import make_engine, upgrade_database
 from app.services.memory.recall_check import SCENARIOS, recall_at_5
 from app.services.memory.retrieval import build_task_query, retrieve_notes
-from app.services.memory.sample_data import insert_sample_notes, test_database_url
+from app.services.memory.sample_data import ensure_user, insert_sample_notes, test_database_url
 
 ALEX, SAM = 9101, 9102
 
@@ -22,14 +22,14 @@ def show(db, user_id, query, label):
 
 
 def main():
-    engine = make_engine(test_database_url())
-    init_schema(engine)
+    url = test_database_url()
+    upgrade_database(url)
+    engine = make_engine(url)
     with engine.connect() as db:
         tx = db.begin()
         try:
-            db.execute(text("INSERT INTO users (id, name) VALUES (:a, 'demo alex'), "
-                            "(:s, 'demo sam') ON CONFLICT (id) DO NOTHING"),
-                       {"a": ALEX, "s": SAM})
+            ensure_user(db, ALEX, "retrieval-demo-alex", "demo alex")
+            ensure_user(db, SAM, "retrieval-demo-sam", "demo sam")
             id_map = insert_sample_notes(db, ALEX)
             print(f"Loaded {len(id_map)} of Maddie's sample notes for Alex.")
 

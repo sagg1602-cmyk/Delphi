@@ -2,7 +2,7 @@
 
 from fastapi import APIRouter, Depends, Query, Request
 
-from app.core.database import get_current_user_id
+from app.api.deps import get_current_user_id
 from app.services.memory.retrieval import retrieve_notes
 
 router = APIRouter()

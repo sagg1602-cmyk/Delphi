@@ -5,6 +5,7 @@ import os
 from pathlib import Path
 
 from dotenv import load_dotenv
+from sqlalchemy import text
 from sqlalchemy.engine import make_url
 
 from app.repositories import create_note
@@ -27,6 +28,20 @@ def load_sample_notes():
     if errors:
         raise RuntimeError(f"Some sample notes failed to load: {errors}")
     return [note.to_dict() for note in notes]
+
+
+def ensure_user(db, user_id: int, external_id: str, name: str) -> None:
+    """Insert a user id used by retrieval checks. Existing ids are left alone."""
+    db.execute(
+        text(
+            """
+            INSERT INTO users (id, external_id, name)
+            VALUES (:id, :external_id, :name)
+            ON CONFLICT (id) DO NOTHING
+            """
+        ),
+        {"id": user_id, "external_id": external_id, "name": name},
+    )
 
 
 def insert_sample_notes(db, user_id):

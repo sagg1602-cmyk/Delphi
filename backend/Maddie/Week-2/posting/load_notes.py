@@ -8,7 +8,7 @@ Usage (from the repo root, with the API running):
     python load_notes.py
     python load_notes.py --base-url http://localhost:8000 --fixtures shared/fixtures
     python load_notes.py --dry-run
-    python load_notes.py --header "X-Dev-User: 1"      # only if the API ever needs one
+    python load_notes.py --header "X-Dev-User: dev-user-2"
 """
 import argparse
 import json
