@@ -1,32 +1,91 @@
-"""Run all three Week 1 scenarios and verify their main outcomes."""
+"""Demonstrate Week 2 recommendations using fake data.
 
-import argparse
+Run from the repository root:
+python -m backend.app.services.recommendations.demo
+"""
+
 import json
+from copy import deepcopy
+from datetime import date
 
-from engine import FIXTURE_DIR, generate_recommendations
+from .context import build_user_context
+from .engine import generate_recommendations
+from .fake_sources import FakeSources
 
 
-def run_demo(write_fixtures=False):
-    outputs = {}
-    for name in ("due_task", "changed_interest", "no_context"):
-        context = json.loads((FIXTURE_DIR / f"{name}.input.json").read_text())
-        result = generate_recommendations(context)
-        outputs[name] = result
-        rendered = json.dumps(result, indent=2) + "\n"
-        print(f"\nSCENARIO: {name}\n{rendered}")
-        if write_fixtures:
-            (FIXTURE_DIR / f"{name}.output.json").write_text(rendered, encoding="utf-8")
+def run_scenario(name, sample, expected_types, user_id=1):
+    sources = FakeSources(sample)
+    context = build_user_context(
+        db=None,
+        user_id=user_id,
+        sources=sources,
+        today=date.fromisoformat(sample["today"]),
+    )
+    result = generate_recommendations(context)
 
-    assert outputs["due_task"][0]["action_target"] == "task_calc"
-    assert outputs["due_task"][1]["evidence_ids"] == ["resource_python_tutorial"]
-    assert outputs["changed_interest"][0] == outputs["due_task"][0]
-    assert outputs["changed_interest"][1]["evidence_ids"] == ["resource_postgresql_tutorial"]
-    assert outputs["no_context"] == []
-    print("PASS: due task, changed interest, and no usable context.")
+    assert [item["type"] for item in result] == expected_types
+    print(f"\nSCENARIO: {name}")
+    print(json.dumps(
+        {"recommendations": result},
+        indent=2,
+        ensure_ascii=False,
+    ))
+    return result
+
+
+def run_demo():
+    original = FakeSources.from_fixture().context
+
+    run_scenario(
+        "Due task and active interest",
+        original,
+        ["study", "discovery"],
+    )
+
+    changed = deepcopy(original)
+    changed["interests"][0]["name"] = "SQL"
+    changed["catalog"].append({
+        "id": "resource_sql",
+        "title": "PostgreSQL Tutorial",
+        "tags": ["sql"],
+        "url": "https://www.postgresql.org/docs/current/tutorial.html",
+    })
+    result = run_scenario(
+        "Changed interest", changed, ["study", "discovery"]
+    )
+    assert result[1]["id"] == "discovery-resource_sql"
+
+    completed = deepcopy(original)
+    completed["tasks"][0]["status"] = "done"
+    run_scenario("Completed task", completed, ["discovery"])
+
+    cancelled = deepcopy(original)
+    cancelled["tasks"][0]["status"] = "cancelled"
+    run_scenario("Cancelled task", cancelled, ["discovery"])
+
+    inactive = deepcopy(original)
+    inactive["interests"][0]["active"] = False
+    run_scenario("Deactivated interest", inactive, ["study"])
+
+    no_notes = deepcopy(original)
+    no_notes["retrieved_notes"] = []
+    result = run_scenario(
+        "No notes", no_notes, ["study", "discovery"]
+    )
+    assert all(
+        item["type"] != "note"
+        for item in result[0]["evidence"]
+    )
+
+    no_tasks = deepcopy(original)
+    no_tasks["tasks"] = []
+    run_scenario("No tasks", no_tasks, ["discovery"])
+
+    run_scenario("Empty user", original, [], user_id=999)
+
+    print("\nPASS: all eight fake-data scenarios.")
+    print("Real database integration is not demonstrated here.")
 
 
 if __name__ == "__main__":
-    parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument("--write-fixtures", action="store_true",
-                        help="Regenerate the three output JSON files for the frontend.")
-    run_demo(parser.parse_args().write_fixtures)
+    run_demo()

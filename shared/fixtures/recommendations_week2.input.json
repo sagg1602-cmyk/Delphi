@@ -1,0 +1,37 @@
+{
+  "user_id": 1,
+  "today": "2026-11-04",
+  "tasks": [
+    {
+      "id": "task_calc",
+      "user_id": 1,
+      "title": "Calculus homework",
+      "due_date": "2026-11-06",
+      "status": "todo"
+    }
+  ],
+  "interests": [
+    {
+      "id": "interest_python",
+      "user_id": 1,
+      "name": "Python",
+      "active": true
+    }
+  ],
+  "retrieved_notes": [
+    {
+      "id": "note_calc",
+      "user_id": 1,
+      "title": "Calculus: derivative rules",
+      "content": "Use the product rule when differentiating a product."
+    }
+  ],
+  "catalog": [
+    {
+      "id": "resource_python_tutorial",
+      "title": "The Python Tutorial",
+      "tags": ["python"],
+      "url": "https://docs.python.org/3/tutorial/"
+    }
+  ]
+}
