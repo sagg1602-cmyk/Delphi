@@ -1,23 +1,24 @@
-"""Engine, schema setup, and the dev-only user dependency.
+"""Engine and migrations.
 
 There is no connection at import time. Callers pass a URL into make_engine(),
 so tests can open delphi_test without ever reading DATABASE_URL.
+The dev-user lookup lives in app.api.deps.get_current_user_id.
 """
 
 import os
 from pathlib import Path
 
 from dotenv import load_dotenv
-from sqlalchemy import create_engine, text
+from sqlalchemy import create_engine
 from sqlalchemy.engine import Engine
 
-# DEV ONLY, replace with real auth in a later week.
-DEV_USER_ID = 1
+# Header value used when X-Dev-User is missing. Week 3 replaces the lookup.
+DEFAULT_EXTERNAL_ID = "dev-user-1"
 
-# This file lives in backend/app/core/. Schema and .env stay in backend/.
+# This file lives in backend/app/core/. .env and alembic.ini stay in backend/.
 BACKEND_DIR = Path(__file__).resolve().parents[2]
 ENV_PATH = BACKEND_DIR / ".env"
-SCHEMA_PATH = BACKEND_DIR / "schema.sql"
+ALEMBIC_INI = BACKEND_DIR / "alembic.ini"
 
 
 def database_url() -> str:
@@ -37,60 +38,19 @@ def make_engine(url: str) -> Engine:
     return create_engine(url, pool_pre_ping=True)
 
 
-def _sql_statements(sql: str) -> list[str]:
-    """Split a SQL script on semicolons, keeping quoted text intact."""
-    statements: list[str] = []
-    current: list[str] = []
-    in_string = False
-    i = 0
-    while i < len(sql):
-        char = sql[i]
-        if char == "'":
-            if in_string and i + 1 < len(sql) and sql[i + 1] == "'":
-                current.append("''")
-                i += 2
-                continue
-            in_string = not in_string
-            current.append(char)
-        elif char == ";" and not in_string:
-            statement = "".join(current).strip()
-            if _has_sql(statement):
-                statements.append(statement)
-            current = []
-        else:
-            current.append(char)
-        i += 1
-    tail = "".join(current).strip()
-    if _has_sql(tail):
-        statements.append(tail)
-    return statements
+def upgrade_database(url: str | None = None) -> None:
+    """Apply Alembic migrations. Pass a URL to avoid reading DATABASE_URL."""
+    from alembic import command
+    from alembic.config import Config
 
-
-def _has_sql(statement: str) -> bool:
-    lines = [line.split("--", 1)[0] for line in statement.splitlines()]
-    return bool("".join(lines).strip())
-
-
-def init_schema(engine: Engine) -> None:
-    """Apply schema.sql in one transaction. Safe to run more than once."""
-    sql = SCHEMA_PATH.read_text(encoding="utf-8")
-    with engine.begin() as conn:
-        for statement in _sql_statements(sql):
-            conn.execute(text(statement))
-
-
-def get_current_user_id() -> int:
-    """DEV ONLY. Every request acts as the seeded development user."""
-    return DEV_USER_ID
+    cfg = Config(str(ALEMBIC_INI))
+    cfg.set_main_option("sqlalchemy.url", url or database_url())
+    command.upgrade(cfg, "head")
 
 
 def main() -> None:
-    engine = make_engine(database_url())
-    try:
-        init_schema(engine)
-    finally:
-        engine.dispose()
-    print("Schema applied.")
+    upgrade_database()
+    print("Migrations applied.")
 
 
 if __name__ == "__main__":
