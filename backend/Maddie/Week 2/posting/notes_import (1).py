@@ -5,7 +5,6 @@ Saving goes through Ava's create_note route function, so there is no SQL here.
 """
 
 import importlib.util
-import json
 import re
 import tempfile
 from pathlib import Path
@@ -46,6 +45,9 @@ def parse_markdown(raw: bytes, filename: str) -> tuple[str, str]:
     the Week 1 loader. Any other readable Markdown takes its title from the
     first heading, and from the file name if there is no heading.
     """
+    if not raw.replace(b"\xef\xbb\xbf", b"", 1).strip():  # empty, or just an invisible BOM
+        raise HTTPException(status_code=422, detail=f"{filename}: file is empty")
+
     with tempfile.TemporaryDirectory() as tmp:
         path = Path(tmp) / "upload.md"  # fixed name: the loader needs a .md path
         path.write_bytes(raw)
@@ -100,7 +102,8 @@ def import_note(
 
     try:
         body = NoteCreate(**fields)
-    except ValidationError as exc:  # e.g. a heading longer than 200 characters
-        raise HTTPException(status_code=422, detail=json.loads(exc.json(include_url=False))) from exc
+    except ValidationError as exc:  # e.g. a heading over 200 characters
+        problems = "; ".join(f"{'.'.join(map(str, e['loc']))}: {e['msg']}" for e in exc.errors())
+        raise HTTPException(status_code=422, detail=f"{filename}: {problems}") from exc
 
     return _find_create_note(request)(body=body, request=request, user_id=user_id)
