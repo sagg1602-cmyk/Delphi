@@ -1,37 +1,60 @@
-"""Week 1 note retrieval with keyword matching.
+"""Note retrieval with PostgreSQL full-text search.
 
-Searches an in-memory list of notes. Week 2 moves this onto
-PostgreSQL full-text search with the same output format.
+Searches the notes table. Title words rank above content words, and any
+query word can match (OR), so long task titles still find notes.
 """
 
 import re
 
-from app.services.memory.sample_notes import SAMPLE_NOTES
+from sqlalchemy import text
+from sqlalchemy.engine import Connection
 
 STOPWORDS = {
     "a", "an", "and", "are", "as", "at", "be", "by", "for", "from", "how",
-    "i", "in", "is", "it", "my", "of", "on", "or", "the", "to", "what",
-    "with", "about", "do", "does", "me", "notes", "note",
+    "i", "in", "into", "is", "it", "my", "of", "on", "or", "the", "to",
+    "what", "with", "about", "do", "does", "me", "notes", "note", "this",
+    "that",
 }
 
-TITLE_WEIGHT = 2
-CONTENT_WEIGHT = 1
-EXCERPT_LENGTH = 120
+EXCERPT_LENGTH = 160
+
+# ts_rank has no upper limit. Normalization option 32 divides rank by
+# (rank + 1), so scores stay between 0 and 1.
+SEARCH_SQL = text(
+    """
+    WITH q AS (SELECT to_tsquery('english', :tsquery) AS query)
+    SELECT n.id, n.user_id, n.title, n.content, n.source_type,
+           ts_rank(
+               setweight(to_tsvector('english', n.title), 'A')
+               || setweight(to_tsvector('english', n.content), 'B'),
+               q.query,
+               32
+           ) AS score
+    FROM notes n, q
+    WHERE n.user_id = :user_id
+      AND (
+          setweight(to_tsvector('english', n.title), 'A')
+          || setweight(to_tsvector('english', n.content), 'B')
+      ) @@ q.query
+    ORDER BY score DESC, n.id
+    LIMIT :limit
+    """
+)
 
 
-def tokenize(text):
-    words = re.findall(r"[a-z0-9]+", text.lower())
-    return [w for w in words if w not in STOPWORDS]
+def query_words(query):
+    words = re.findall(r"[a-z0-9]+", query.lower())
+    return list(dict.fromkeys(w for w in words if w not in STOPWORDS))
 
 
-def make_excerpt(content, query_words):
+def make_excerpt(content, words):
     lower = content.lower()
-    positions = [lower.find(w) for w in query_words if lower.find(w) != -1]
-    start = max(min(positions) - 30, 0) if positions else 0
+    hits = [lower.find(w) for w in words if lower.find(w) != -1]
+    start = max(min(hits) - 40, 0) if hits else 0
     if start > 0:
         next_space = content.find(" ", start)
         start = next_space + 1 if next_space != -1 else start
-    snippet = content[start:start + EXCERPT_LENGTH].strip()
+    snippet = " ".join(content[start:start + EXCERPT_LENGTH].split())
     if start > 0:
         snippet = "..." + snippet
     if start + EXCERPT_LENGTH < len(content):
@@ -39,46 +62,46 @@ def make_excerpt(content, query_words):
     return snippet
 
 
-def score_note(note, query_words):
-    title_words = set(tokenize(note["title"]))
-    content_words = set(tokenize(note["content"]))
-    score = 0
-    for word in query_words:
-        if word in title_words:
-            score += TITLE_WEIGHT
-        if word in content_words:
-            score += CONTENT_WEIGHT
-    return score
-
-
-def retrieve_notes(user_id, query, limit=5, notes=None):
+def retrieve_notes(db: Connection, user_id: int, query: str, limit: int = 5) -> list[dict]:
     """Return the user's best matching notes, best first.
 
-    Each result has note_id, title, excerpt, score (0 to 1), and source_type.
-    Returns [] when nothing matches.
+    Each result has note_id, user_id, title, excerpt, score (0 to 1),
+    and source_type. Returns [] when nothing matches.
     """
-    if notes is None:
-        notes = SAMPLE_NOTES
-
-    query_words = list(dict.fromkeys(tokenize(query)))
-    if not query_words:
+    words = query_words(query)
+    if not words or limit <= 0:
         return []
 
-    max_score = len(query_words) * (TITLE_WEIGHT + CONTENT_WEIGHT)
-    results = []
-    for note in notes:
-        if note["user_id"] != user_id:
-            continue
-        raw = score_note(note, query_words)
-        if raw == 0:
-            continue
-        results.append({
-            "note_id": note["id"],
-            "title": note["title"],
-            "excerpt": make_excerpt(note["content"], query_words),
-            "score": round(raw / max_score, 2),
-            "source_type": note["source_type"],
-        })
+    rows = db.execute(
+        SEARCH_SQL,
+        {"tsquery": " | ".join(words), "user_id": user_id, "limit": limit},
+    ).mappings().all()
 
-    results.sort(key=lambda r: r["score"], reverse=True)
-    return results[:limit]
+    return [
+        {
+            "note_id": row["id"],
+            "user_id": row["user_id"],
+            "title": row["title"],
+            "excerpt": make_excerpt(row["content"], words),
+            "score": round(float(row["score"]), 3),
+            "source_type": row["source_type"],
+        }
+        for row in rows
+    ]
+
+
+def build_task_query(task_title, interests=()):
+    """Turn a task title and active interests into a search string.
+
+    build_task_query("Draft research introduction",
+                     [{"name": "cognition", "active": True},
+                      {"name": "chess", "active": False}])
+    -> "draft research introduction cognition"
+    """
+    names = []
+    for interest in interests:
+        if isinstance(interest, str):
+            names.append(interest)
+        elif interest.get("active", True):
+            names.append(interest.get("name", ""))
+    return " ".join(query_words(" ".join([task_title or ""] + names)))
