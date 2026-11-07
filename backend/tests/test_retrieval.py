@@ -6,7 +6,7 @@ from sqlalchemy import text
 
 from app.core.database import DEV_USER_ID, init_schema, make_engine
 from app.main import create_app
-from app.repositories.notes import create_note
+from app.repositories import create_note
 from app.services.memory.retrieval import build_task_query, retrieve_notes
 from app.services.memory.sample_data import insert_sample_notes
 from app.services.memory.sample_data import test_database_url as get_test_url
