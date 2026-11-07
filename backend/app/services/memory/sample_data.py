@@ -7,7 +7,7 @@ from pathlib import Path
 from dotenv import load_dotenv
 from sqlalchemy.engine import make_url
 
-from app.repositories.notes import create_note
+from app.repositories import create_note
 
 BACKEND_DIR = Path(__file__).resolve().parents[3]
 MADDIE_DIR = BACKEND_DIR / "Maddie" / "Week 1"
