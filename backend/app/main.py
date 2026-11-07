@@ -10,6 +10,7 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import OperationalError
 
 from app.api.health import router as health_router
+from app.api.memory import router as memory_router
 from app.api.notes import router as notes_router
 from app.api.tasks import router as tasks_router
 from app.core.database import database_url, init_schema, make_engine
@@ -48,6 +49,7 @@ def create_app(engine: Engine | None = None) -> FastAPI:
         )
 
     app.include_router(health_router)
+    app.include_router(memory_router)  # before notes, so /notes/search isn't read as /notes/{id}
     app.include_router(notes_router)
     app.include_router(tasks_router)
     return app
