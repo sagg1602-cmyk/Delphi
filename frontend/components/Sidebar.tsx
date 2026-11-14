@@ -3,6 +3,7 @@
 import Link from "next/link";
 import { usePathname } from "next/navigation";
 import { House, FileText, Share2, Compass, SquareCheck, Landmark } from "lucide-react";
+import ApiStatus from "@/components/ApiStatus";
 
 const navItems = [
   { href: "/", label: "Home", icon: House },
@@ -58,6 +59,10 @@ export default function Sidebar() {
             className={`h-3.5 w-3.5 cursor-pointer rounded-full ${v.color} transition hover:scale-125`}
           />
         ))}
+      </div>
+
+      <div className="mt-8">
+        <ApiStatus />
       </div>
     </aside>
   );

@@ -1,1 +1,7 @@
 @import "tailwindcss";
+
+/* Delphi brand colors: use as bg-delphi, text-delphi, bg-delphi-light, etc. */
+@theme {
+  --color-delphi: #5b5bd6;
+  --color-delphi-light: #ececfb;
+}

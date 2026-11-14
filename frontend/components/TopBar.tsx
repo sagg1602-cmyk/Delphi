@@ -1,18 +1,20 @@
 "use client";
 
-import { useEffect, useState } from "react";
+import { useSyncExternalStore } from "react";
 import { Search, Bell } from "lucide-react";
 
 const userName = "Miya"; // Replace with the signed-in user once auth exists
 
-export default function TopBar() {
-  const [greeting, setGreeting] = useState("Welcome back");
+// The greeting depends on the viewer's clock, so the server renders
+// "Welcome back" and the browser swaps in the time-of-day version.
+function greetingNow() {
+  const hour = new Date().getHours();
+  return hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening";
+}
+const noSubscribe = () => () => {};
 
-  // Runs in the browser, so it uses the user's local time
-  useEffect(() => {
-    const hour = new Date().getHours();
-    setGreeting(hour < 12 ? "Good morning" : hour < 18 ? "Good afternoon" : "Good evening");
-  }, []);
+export default function TopBar() {
+  const greeting = useSyncExternalStore(noSubscribe, greetingNow, () => "Welcome back");
 
   return (
     <header className="flex gap-4">
