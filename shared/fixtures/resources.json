@@ -1,0 +1,321 @@
+[
+  {
+    "id": "res-01",
+    "title": "The Python Tutorial",
+    "url": "https://docs.python.org/3/tutorial/",
+    "description": "Official tutorial covering Python syntax, data structures, modules and classes.",
+    "content_type": "documentation",
+    "estimated_minutes": 240,
+    "tags": [
+      "python",
+      "beginner",
+      "programming"
+    ]
+  },
+  {
+    "id": "res-02",
+    "title": "bisect: Array bisection algorithm",
+    "url": "https://docs.python.org/3/library/bisect.html",
+    "description": "Standard-library module for binary search on sorted lists, with examples.",
+    "content_type": "documentation",
+    "estimated_minutes": 15,
+    "tags": [
+      "python",
+      "binary-search",
+      "algorithms",
+      "sorted-list"
+    ]
+  },
+  {
+    "id": "res-03",
+    "title": "Binary search (Khan Academy)",
+    "url": "https://www.khanacademy.org/computing/computer-science/algorithms/binary-search/a/binary-search",
+    "description": "Explains binary search by halving a sorted range, with a guessing-game walkthrough.",
+    "content_type": "article",
+    "estimated_minutes": 20,
+    "tags": [
+      "binary-search",
+      "algorithms",
+      "sorted-list",
+      "beginner"
+    ]
+  },
+  {
+    "id": "res-04",
+    "title": "Algorithms (Khan Academy)",
+    "url": "https://www.khanacademy.org/computing/computer-science/algorithms",
+    "description": "Intro algorithms course: binary search, sorting, recursion and asymptotic analysis.",
+    "content_type": "course",
+    "estimated_minutes": 180,
+    "tags": [
+      "algorithms",
+      "binary-search",
+      "computer-science",
+      "beginner"
+    ]
+  },
+  {
+    "id": "res-05",
+    "title": "Big-O notation (Khan Academy)",
+    "url": "https://www.khanacademy.org/computing/computer-science/algorithms/asymptotic-notation/a/big-o-notation",
+    "description": "Introduces how running time grows with input size, including O(log n).",
+    "content_type": "article",
+    "estimated_minutes": 15,
+    "tags": [
+      "algorithms",
+      "big-o",
+      "binary-search",
+      "computer-science"
+    ]
+  },
+  {
+    "id": "res-06",
+    "title": "Linear Regression, Clearly Explained (StatQuest)",
+    "url": "https://www.youtube.com/watch?v=nk2CQITm_eo",
+    "description": "Video on least squares, residuals and R-squared for a fitted line.",
+    "content_type": "video",
+    "estimated_minutes": 27,
+    "tags": [
+      "linear-regression",
+      "statistics",
+      "residuals",
+      "data-science"
+    ]
+  },
+  {
+    "id": "res-07",
+    "title": "Python for Everybody",
+    "url": "https://www.py4e.com/",
+    "description": "Free beginner course teaching Python and basic data handling from scratch.",
+    "content_type": "course",
+    "estimated_minutes": 900,
+    "tags": [
+      "python",
+      "beginner",
+      "programming",
+      "data-science"
+    ]
+  },
+  {
+    "id": "res-08",
+    "title": "CS50's Introduction to Programming with Python",
+    "url": "https://cs50.harvard.edu/python/",
+    "description": "Harvard course on Python fundamentals with problem sets.",
+    "content_type": "course",
+    "estimated_minutes": 900,
+    "tags": [
+      "python",
+      "computer-science",
+      "beginner",
+      "programming"
+    ]
+  },
+  {
+    "id": "res-09",
+    "title": "Automate the Boring Stuff with Python",
+    "url": "https://automatetheboringstuff.com/",
+    "description": "Free book of practical Python projects for beginners.",
+    "content_type": "book",
+    "estimated_minutes": 600,
+    "tags": [
+      "python",
+      "beginner",
+      "programming"
+    ]
+  },
+  {
+    "id": "res-10",
+    "title": "Think Python, 2nd Edition",
+    "url": "https://greenteapress.com/wp/think-python-2e/",
+    "description": "Free book that teaches programming and computational thinking through Python.",
+    "content_type": "book",
+    "estimated_minutes": 600,
+    "tags": [
+      "python",
+      "computer-science",
+      "algorithms",
+      "beginner"
+    ]
+  },
+  {
+    "id": "res-11",
+    "title": "Kaggle Learn: Python",
+    "url": "https://www.kaggle.com/learn/python",
+    "description": "Short interactive lessons and exercises on core Python.",
+    "content_type": "course",
+    "estimated_minutes": 300,
+    "tags": [
+      "python",
+      "beginner",
+      "exercises"
+    ]
+  },
+  {
+    "id": "res-12",
+    "title": "Kaggle Learn: Pandas",
+    "url": "https://www.kaggle.com/learn/pandas",
+    "description": "Hands-on exercises for loading, filtering and summarizing data with pandas.",
+    "content_type": "course",
+    "estimated_minutes": 240,
+    "tags": [
+      "python",
+      "pandas",
+      "data-science",
+      "exercises"
+    ]
+  },
+  {
+    "id": "res-13",
+    "title": "Kaggle Learn: Intro to Machine Learning",
+    "url": "https://www.kaggle.com/learn/intro-to-machine-learning",
+    "description": "First models in Python: training, validation and avoiding over-fitting.",
+    "content_type": "course",
+    "estimated_minutes": 180,
+    "tags": [
+      "python",
+      "data-science",
+      "machine-learning",
+      "regression"
+    ]
+  },
+  {
+    "id": "res-14",
+    "title": "10 minutes to pandas",
+    "url": "https://pandas.pydata.org/docs/user_guide/10min.html",
+    "description": "Quick tour of the pandas library for working with tabular data.",
+    "content_type": "documentation",
+    "estimated_minutes": 10,
+    "tags": [
+      "python",
+      "pandas",
+      "data-science"
+    ]
+  },
+  {
+    "id": "res-15",
+    "title": "NumPy: the absolute basics for beginners",
+    "url": "https://numpy.org/doc/stable/user/absolute_beginners.html",
+    "description": "Introduces NumPy arrays and the operations used in numerical Python.",
+    "content_type": "documentation",
+    "estimated_minutes": 30,
+    "tags": [
+      "python",
+      "numpy",
+      "data-science"
+    ]
+  },
+  {
+    "id": "res-16",
+    "title": "scikit-learn: Linear Models",
+    "url": "https://scikit-learn.org/stable/modules/linear_model.html",
+    "description": "Reference on fitting linear regression in Python, including least squares.",
+    "content_type": "documentation",
+    "estimated_minutes": 20,
+    "tags": [
+      "python",
+      "linear-regression",
+      "data-science",
+      "regression",
+      "statistics"
+    ]
+  },
+  {
+    "id": "res-17",
+    "title": "Statistics and probability (Khan Academy)",
+    "url": "https://www.khanacademy.org/math/statistics-probability",
+    "description": "Full statistics course including scatterplots, residuals and regression.",
+    "content_type": "course",
+    "estimated_minutes": 600,
+    "tags": [
+      "statistics",
+      "linear-regression",
+      "residuals",
+      "data-science"
+    ]
+  },
+  {
+    "id": "res-18",
+    "title": "Seeing Theory",
+    "url": "https://seeing-theory.brown.edu/",
+    "description": "Interactive visual introduction to probability and statistics, including regression.",
+    "content_type": "interactive",
+    "estimated_minutes": 60,
+    "tags": [
+      "statistics",
+      "linear-regression",
+      "data-science",
+      "visualization"
+    ]
+  },
+  {
+    "id": "res-19",
+    "title": "OpenIntro Statistics",
+    "url": "https://www.openintro.org/book/os/",
+    "description": "Free textbook with a chapter on linear regression and residuals.",
+    "content_type": "book",
+    "estimated_minutes": 600,
+    "tags": [
+      "statistics",
+      "linear-regression",
+      "residuals",
+      "data-science"
+    ]
+  },
+  {
+    "id": "res-20",
+    "title": "Microeconomics (Khan Academy)",
+    "url": "https://www.khanacademy.org/economics-finance-domain/microeconomics",
+    "description": "Intro microeconomics course covering supply, demand and markets.",
+    "content_type": "course",
+    "estimated_minutes": 600,
+    "tags": [
+      "economics",
+      "supply-demand",
+      "microeconomics",
+      "beginner"
+    ]
+  },
+  {
+    "id": "res-21",
+    "title": "Supply, demand, and market equilibrium (Khan Academy)",
+    "url": "https://www.khanacademy.org/economics-finance-domain/microeconomics/supply-demand-equilibrium",
+    "description": "Explains demand and supply curves, equilibrium price and shifts versus movements along a curve.",
+    "content_type": "course",
+    "estimated_minutes": 60,
+    "tags": [
+      "economics",
+      "supply-demand",
+      "equilibrium",
+      "microeconomics"
+    ]
+  },
+  {
+    "id": "res-22",
+    "title": "Pro Git",
+    "url": "https://git-scm.com/book/en/v2",
+    "description": "Free book on Git: staging, commits, branching and merging.",
+    "content_type": "book",
+    "estimated_minutes": 120,
+    "tags": [
+      "git",
+      "version-control",
+      "branching",
+      "programming"
+    ]
+  },
+  {
+    "id": "res-23",
+    "title": "Python Data Science Handbook",
+    "url": "https://jakevdp.github.io/PythonDataScienceHandbook/",
+    "description": "Free book on NumPy, pandas, Matplotlib and scikit-learn.",
+    "content_type": "book",
+    "estimated_minutes": 600,
+    "tags": [
+      "python",
+      "data-science",
+      "pandas",
+      "numpy",
+      "machine-learning"
+    ]
+  }
+]
