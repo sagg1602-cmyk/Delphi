@@ -96,3 +96,16 @@ def test_resource_urls_valid_and_unique(resources):
         assert u.scheme in {"http", "https"} and u.netloc, f"{r['id']}: bad URL {r['url']!r}"
         assert r["url"] not in seen, f"{r['id']}: duplicate URL"
         seen.add(r["url"])
+
+
+# ---------- alignment with the demo student (docs/demo-student.md) ----------
+
+def test_resources_align_with_demo_student(resources):
+    """Alex's interests are Python (active) and Data science; notes 3 and 7 are binary search and linear regression."""
+    tagged = lambda tag: [r for r in resources if tag in r["tags"]]
+    assert len(tagged("python")) >= 5, "need several resources tagged 'python' (active interest)"
+    assert tagged("data-science"), "need at least one 'data-science' resource (secondary interest)"
+    assert tagged("binary-search"), "need a resource overlapping note 3 (binary search)"
+    assert tagged("linear-regression"), "need a resource overlapping note 7 (linear regression)"
+    assert any("python" in r["tags"] and r["estimated_minutes"] <= 25 for r in resources), \
+        "need a short Python resource that fits the 25-minute binary search task"
