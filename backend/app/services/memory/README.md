@@ -44,4 +44,4 @@ Registered in `main.py` before the notes router, so a later `/notes/{id}` route 
 
 ## Recall@5
 
-10 scenarios over Maddie's 10 sample notes: **1.00**. Easy with only 10 very different notes, so it should be rerun on the 25-note set.
+10 scenarios over the first sample notes: **1.00** when only those notes are loaded. The full set is `backend/test_data/notes` (25 files).

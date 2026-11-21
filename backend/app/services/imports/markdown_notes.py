@@ -98,15 +98,15 @@ def load_folder(folder):
 
 
 if __name__ == "__main__":
-    here = Path(__file__).parent
+    data = Path(__file__).resolve().parents[3] / "test_data"
 
     print("--- Sample import: notes/ ---")
-    notes, errors = load_folder(here / "notes")
+    notes, errors = load_folder(data / "notes")
     for n in notes:
         print(n)
     print(f"Loaded {len(notes)} notes, {len(errors)} errors\n")
 
     print("--- Edge cases: bad_samples/ ---")
-    notes, errors = load_folder(here / "bad_samples")
+    notes, errors = load_folder(data / "bad_samples")
     for name, msg in errors:
         print("SKIPPED ->", msg)

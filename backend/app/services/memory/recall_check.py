@@ -1,10 +1,8 @@
 """Recall@5 over Maddie's sample notes. Run from backend/: python -m app.services.memory.recall_check"""
 
-from sqlalchemy import text
-
-from app.core.database import init_schema, make_engine
+from app.core.database import make_engine, upgrade_database
 from app.services.memory.retrieval import build_task_query, retrieve_notes
-from app.services.memory.sample_data import insert_sample_notes, test_database_url
+from app.services.memory.sample_data import ensure_user, insert_sample_notes, test_database_url
 
 CHECK_USER_ID = 9001
 
@@ -37,16 +35,13 @@ def recall_at_5(db, user_id, id_map):
 
 
 def main():
-    engine = make_engine(test_database_url())
-    init_schema(engine)
+    url = test_database_url()
+    upgrade_database(url)
+    engine = make_engine(url)
     with engine.connect() as db:
         tx = db.begin()
         try:
-            db.execute(
-                text("INSERT INTO users (id, name) VALUES (:id, 'recall check') "
-                     "ON CONFLICT (id) DO NOTHING"),
-                {"id": CHECK_USER_ID},
-            )
+            ensure_user(db, CHECK_USER_ID, "retrieval-recall-check", "recall check")
             id_map = insert_sample_notes(db, CHECK_USER_ID)
             score, lines = recall_at_5(db, CHECK_USER_ID, id_map)
         finally:

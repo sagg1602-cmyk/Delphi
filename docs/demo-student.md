@@ -10,10 +10,10 @@ Maddie and Xitlaly should confirm this proposal against their expanded dataset.
 | --- | --- | --- |
 | Active interest | `Python` | Match catalog tag `python` |
 | Primary task | `Practice binary search in Python`; due two days after rehearsal; 25 minutes; `todo` | Study candidate |
-| Supporting note | Existing `backend/Maddie/Week 1/notes/note_03_binary_search.md` (file ID 3) | Evidence from a real saved note |
+| Supporting note | Existing `backend/test_data/notes/note_03_binary_search.md` (file ID 3) | Evidence from a real saved note |
 | Secondary task | `Review linear regression residuals`; due five days after rehearsal | Later-deadline comparison |
 | Secondary note | Existing `note_07_linear_regression.md` (file ID 7) | Same student's statistics coursework |
-| Secondary interest | `Data science` | Future catalog overlap after resources are reviewed |
+| Secondary interest | `data-science` | Matches the catalog tag. The engine compares the whole name. |
 | Discovery resource | The Python Tutorial, `https://docs.python.org/3/tutorial/` | Existing recommendation fixture candidate; not a substitute for Maddie's checked catalog |
 
 Create all records under the same development user. Use returned database IDs in

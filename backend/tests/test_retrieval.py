@@ -4,11 +4,11 @@ import pytest
 from fastapi.testclient import TestClient
 from sqlalchemy import text
 
-from app.core.database import DEV_USER_ID, init_schema, make_engine
+from app.core.database import make_engine
 from app.main import create_app
 from app.repositories import create_note
 from app.services.memory.retrieval import build_task_query, retrieve_notes
-from app.services.memory.sample_data import insert_sample_notes
+from app.services.memory.sample_data import ensure_user, insert_sample_notes
 from app.services.memory.sample_data import test_database_url as get_test_url
 
 ALEX = 501
@@ -16,9 +16,8 @@ SAM = 502
 
 
 @pytest.fixture(scope="module")
-def engine():
+def engine(migrated_database):
     eng = make_engine(get_test_url())
-    init_schema(eng)
     yield eng
     eng.dispose()
 
@@ -27,10 +26,8 @@ def engine():
 def db(engine):
     with engine.connect() as conn:
         tx = conn.begin()
-        conn.execute(text(
-            "INSERT INTO users (id, name) VALUES (:a, 'alex test'), (:s, 'sam test') "
-            "ON CONFLICT (id) DO NOTHING"
-        ), {"a": ALEX, "s": SAM})
+        ensure_user(conn, ALEX, "retrieval-alex", "alex test")
+        ensure_user(conn, SAM, "retrieval-sam", "sam test")
         conn.ids = insert_sample_notes(conn, ALEX)
         yield conn
         tx.rollback()
@@ -108,7 +105,10 @@ def test_build_task_query():
 
 def test_search_route(engine):
     with engine.begin() as conn:
-        note = create_note(conn, DEV_USER_ID, "Zebrafish lab", "Zebrafish embryo imaging.", "manual")
+        user_id = conn.execute(
+            text("SELECT id FROM users WHERE external_id = 'dev-user-1'")
+        ).scalar_one()
+        note = create_note(conn, user_id, "Zebrafish lab", "Zebrafish embryo imaging.", "manual")
     try:
         with TestClient(create_app(engine)) as client:
             response = client.get("/notes/search", params={"q": "zebrafish", "limit": 5})

@@ -1,19 +1,12 @@
-"""Schema entry point. The implementation lives in app.core.database."""
+"""Migration entry point. The implementation lives in app.core.database."""
 
-from app.core.database import (
-    database_url,
-    get_current_user_id,
-    init_schema,
-    make_engine,
-    main,
-)
+from app.core.database import database_url, main, make_engine, upgrade_database
 
 __all__ = [
     "database_url",
-    "get_current_user_id",
-    "init_schema",
-    "make_engine",
     "main",
+    "make_engine",
+    "upgrade_database",
 ]
 
 if __name__ == "__main__":

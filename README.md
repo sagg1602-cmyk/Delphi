@@ -8,8 +8,9 @@ Delphi is an AI-powered student productivity assistant developed by a team at th
 - backend/ - Python and FastAPI application
 - backend/app/api/ - API endpoints
 - backend/app/core/ - Backend configuration
-- backend/app/models/ - Database models
+- backend/app/repositories/ - Database queries
 - backend/app/schemas/ - Request and response schemas
+- backend/alembic/ - Database migrations
 - backend/app/services/memory/ - Memory retrieval
 - backend/app/services/imports/ - Note ingestion
 - backend/app/services/recommendations/ - Recommendation logic
@@ -26,11 +27,18 @@ Delphi is an AI-powered student productivity assistant developed by a team at th
 
 ## Getting Started
 
-Clone the repository and copy the environment template:
+Clone the repository. Backend setup, schema, and one example for every route are in [backend/HANDOFF.md](backend/HANDOFF.md).
 
-    cp .env.example .env
+From `backend/`:
 
-Backend and frontend installation instructions will be added as the respective applications are implemented.
+```bash
+python3 -m venv .venv
+source .venv/bin/activate
+pip install -r requirements.txt
+alembic upgrade head
+python -m app.seed
+uvicorn main:app --reload --port 8000
+```
 
 ## Development Workflow
 

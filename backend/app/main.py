@@ -1,4 +1,4 @@
-"""Delphi Week 1 API: health, notes, and tasks for the seeded dev user."""
+"""Delphi API: health, notes, tasks, interests, and note search for the dev user."""
 
 from collections.abc import AsyncIterator
 from contextlib import asynccontextmanager
@@ -10,14 +10,21 @@ from sqlalchemy.engine import Engine
 from sqlalchemy.exc import OperationalError
 
 from app.api.health import router as health_router
+from app.api.interests import router as interests_router
 from app.api.memory import router as memory_router
 from app.api.notes import router as notes_router
+from app.api.recommendations import router as recommendations_router
 from app.api.tasks import router as tasks_router
-from app.core.database import database_url, init_schema, make_engine
+from app.core.database import database_url, make_engine
+from app.services.recommendations.live_sources import LiveSources
 
 
 def create_app(engine: Engine | None = None) -> FastAPI:
-    """Build the API. Pass an engine to point tests at delphi_test."""
+    """Build the API. Pass an engine to point tests at delphi_test.
+
+    Tables come from Alembic. Starting the API does not migrate.
+    Recommendations are generated from the database and the catalog file.
+    """
 
     @asynccontextmanager
     async def lifespan(app: FastAPI) -> AsyncIterator[None]:
@@ -27,13 +34,12 @@ def create_app(engine: Engine | None = None) -> FastAPI:
             app_engine = make_engine(database_url())
         app.state.engine = app_engine
         try:
-            init_schema(app_engine)
             yield
         finally:
             if owns_engine:
                 app_engine.dispose()
 
-    app = FastAPI(title="Delphi API (Week 1, dev only)", lifespan=lifespan)
+    app = FastAPI(title="Delphi API (dev only)", lifespan=lifespan)
     app.add_middleware(
         CORSMiddleware,
         allow_origins=["http://localhost:3000"],
@@ -48,10 +54,13 @@ def create_app(engine: Engine | None = None) -> FastAPI:
             content={"detail": "Database unavailable"},
         )
 
+    app.state.recommendation_sources = LiveSources()
     app.include_router(health_router)
     app.include_router(memory_router)  # before notes, so /notes/search isn't read as /notes/{id}
     app.include_router(notes_router)
     app.include_router(tasks_router)
+    app.include_router(interests_router)
+    app.include_router(recommendations_router)
     return app
 
 

@@ -7,17 +7,17 @@ from urllib.parse import urlparse
 import pytest
 
 
-def _fixtures_dir() -> Path:
+def _repo_root() -> Path:
     here = Path(__file__).resolve()
     for parent in here.parents:
-        if (parent / "shared" / "fixtures").is_dir():
-            return parent / "shared" / "fixtures"
-    raise FileNotFoundError("shared/fixtures not found above " + str(here))
+        if (parent / "shared" / "fixtures").is_dir() and (parent / "backend" / "test_data").is_dir():
+            return parent
+    raise FileNotFoundError("repository root not found above " + str(here))
 
 
-FIXTURES = _fixtures_dir()
-NOTE_FILES = sorted(FIXTURES.glob("note_*.md"))
-RESOURCES_FILE = FIXTURES / "resources.json"
+REPO = _repo_root()
+NOTE_FILES = sorted((REPO / "backend" / "test_data" / "notes").glob("note_*.md"))
+RESOURCES_FILE = REPO / "shared" / "fixtures" / "resources.json"
 
 RESOURCE_FIELDS = {"id", "title", "url", "description", "content_type", "estimated_minutes", "tags"}
 
