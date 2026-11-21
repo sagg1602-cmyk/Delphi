@@ -31,7 +31,7 @@ def main():
             ensure_user(db, ALEX, "retrieval-demo-alex", "demo alex")
             ensure_user(db, SAM, "retrieval-demo-sam", "demo sam")
             id_map = insert_sample_notes(db, ALEX)
-            print(f"Loaded {len(id_map)} of Maddie's sample notes for Alex.")
+            print(f"Loaded {len(id_map)} fictional notes for Alex.")
 
             show(db, ALEX, build_task_query("Bio exam on cell division", ["biology"]),
                  "1) Task: 'Bio exam on cell division' + interest 'biology'")

@@ -1,9 +1,10 @@
 """Create the dev users plus sample tasks and interests.
 
 The tasks match the fictional student in docs/demo-student.md. Due dates are
-counted from the day this seed runs. Notes are not seeded. Maddie's loader
-posts those. Run after `alembic upgrade head`. Running it again skips a title
-or interest name that is already stored and does not move an existing due date.
+counted from the day this seed runs. Notes are not seeded. Post those with
+`python -m app.services.imports.load_notes` while the API is running. Run this
+after `alembic upgrade head`. Running it again skips a title or interest name
+that is already stored and does not move an existing due date.
 """
 
 from datetime import date, timedelta
@@ -16,7 +17,9 @@ from app.repositories.tasks import create_task
 
 EMPTY_DEV_USER = "dev-user-2"
 
-SAMPLE_INTERESTS = ("Python", "Data science")
+# "data-science" matches the catalog tag. The recommendation engine compares
+# the whole interest name with a tag, so "Data science" would not match.
+SAMPLE_INTERESTS = ("Python", "data-science")
 
 
 def sample_tasks(today: date | None = None) -> tuple[dict, ...]:

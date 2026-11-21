@@ -1,26 +1,21 @@
-"""POST /notes/import: save one uploaded Markdown file as a note.
+"""Draft upload route. It is not registered on the app.
 
-Parsing uses the Week 1 loader (Note.mdReader in Maddie/Week 1/NoteReqDraft.py).
-Saving goes through Ava's create_note route function, so there is no SQL here.
+Create a note with POST /notes. The parser lives in markdown_notes.py.
 """
 
-import importlib.util
 import re
 import tempfile
 from pathlib import Path
 
-from fastapi import APIRouter, Depends, File, HTTPException, Request, UploadFile
+from fastapi import APIRouter, Depends, File, HTTPException, UploadFile
 from pydantic import ValidationError
 
-from database import get_current_user_id
-from models import NoteCreate, NoteOut
+from sqlalchemy.engine import Connection
 
-# Load the Week 1 loader straight from where it already lives (its folder name has a space).
-_LOADER_PATH = Path(__file__).resolve().parent / "Maddie" / "Week 1" / "NoteReqDraft.py"
-_spec = importlib.util.spec_from_file_location("note_req_draft", _LOADER_PATH)
-_loader = importlib.util.module_from_spec(_spec)
-_spec.loader.exec_module(_loader)
-Note, NoteFormatError = _loader.Note, _loader.NoteFormatError
+from app.api.deps import get_current_user_id, get_db
+from app.repositories.notes import create_note
+from app.schemas import NoteCreate, NoteOut
+from app.services.imports.markdown_notes import Note, NoteFormatError
 
 router = APIRouter()
 
@@ -66,18 +61,10 @@ def parse_markdown(raw: bytes, filename: str) -> tuple[str, str]:
             return Path(filename).stem, text.strip()
 
 
-def _find_create_note(request: Request):
-    """Ava's create_note is defined inside create_app(), so look it up on the app."""
-    for route in request.app.routes:
-        if getattr(route, "path", None) == "/notes" and "POST" in getattr(route, "methods", ()):
-            return route.endpoint
-    raise HTTPException(status_code=500, detail="POST /notes is not registered")
-
-
 @router.post("/notes/import", status_code=201, response_model=NoteOut)
 def import_note(
-    request: Request,
     file: UploadFile = File(...),
+    db: Connection = Depends(get_db),
     user_id: int = Depends(get_current_user_id),
 ) -> dict:
     filename = Path(file.filename or "").name or "upload.md"
@@ -96,14 +83,17 @@ def import_note(
         "source_type": "markdown_import",
         "source_path": filename,
     }
-    if "source_path" not in NoteCreate.model_fields:
-        # TODO(Ava): notes has no source_path column yet. Delete this check once it does.
-        fields.pop("source_path")
-
     try:
         body = NoteCreate(**fields)
     except ValidationError as exc:  # e.g. a heading over 200 characters
         problems = "; ".join(f"{'.'.join(map(str, e['loc']))}: {e['msg']}" for e in exc.errors())
         raise HTTPException(status_code=422, detail=f"{filename}: {problems}") from exc
 
-    return _find_create_note(request)(body=body, request=request, user_id=user_id)
+    return create_note(
+        db,
+        user_id,
+        body.title,
+        body.content,
+        body.source_type,
+        body.source_path,
+    )

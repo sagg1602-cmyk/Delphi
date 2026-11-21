@@ -13,15 +13,17 @@ from app.api.health import router as health_router
 from app.api.interests import router as interests_router
 from app.api.memory import router as memory_router
 from app.api.notes import router as notes_router
+from app.api.recommendations import router as recommendations_router
 from app.api.tasks import router as tasks_router
 from app.core.database import database_url, make_engine
+from app.services.recommendations.live_sources import LiveSources
 
 
 def create_app(engine: Engine | None = None) -> FastAPI:
     """Build the API. Pass an engine to point tests at delphi_test.
 
     Tables come from Alembic. Starting the API does not migrate.
-    The recommendation router stays unmounted until a real source adapter exists.
+    Recommendations are generated from the database and the catalog file.
     """
 
     @asynccontextmanager
@@ -52,11 +54,13 @@ def create_app(engine: Engine | None = None) -> FastAPI:
             content={"detail": "Database unavailable"},
         )
 
+    app.state.recommendation_sources = LiveSources()
     app.include_router(health_router)
     app.include_router(memory_router)  # before notes, so /notes/search isn't read as /notes/{id}
     app.include_router(notes_router)
     app.include_router(tasks_router)
     app.include_router(interests_router)
+    app.include_router(recommendations_router)
     return app
 
 

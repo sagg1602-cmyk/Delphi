@@ -23,8 +23,9 @@ from `backend/`, create/activate a venv, install `requirements.txt`, copy/config
 upgrade. It does not delete rows. A database that already has Week 1 tables is
 left unchanged and the upgrade stops; point `DATABASE_URL` at a new empty
 database instead. These commands are on `ava/release`, not on `main`, until that
-branch is merged. `POST /recommendations/generate` is still not registered, so
-the connected rehearsal gate is not met. Use an isolated local database.
+branch is merged. `POST /recommendations/generate` reads saved rows and the
+catalog file; it is not a fixture. The browser rehearsal is still required
+before the connected demo is done. Use an isolated local database.
 
 ## Connected presentation (only after preflight passes)
 
@@ -43,7 +44,7 @@ the connected rehearsal gate is not met. Use an isolated local database.
 From repository root, Python only; no database or API keys required:
 
 ```bash
-python 'backend/Maddie/Week 1/NoteReqDraft.py'
+python -m backend.app.services.imports.markdown_notes
 python -m backend.app.services.recommendations.demo
 python -m unittest backend.app.services.recommendations.test_engine -v
 ```

@@ -220,6 +220,64 @@ def test_deactivated_interest_leaves_the_active_list(test_engine: Engine) -> Non
     assert all(row["id"] != interest_id for row in active)
 
 
+def test_recommendations_come_from_saved_rows(test_engine: Engine) -> None:
+    url = require_test_database_url()
+    truncate_user_data(url)
+    with test_engine.begin() as conn:
+        conn.execute(
+            text(
+                """
+                INSERT INTO users (external_id, name)
+                VALUES ('dev-user-2', 'dev-user-2')
+                ON CONFLICT (external_id) DO NOTHING
+                """
+            )
+        )
+    with TestClient(create_app(test_engine)) as client:
+        note = client.post(
+            "/notes",
+            json={
+                "title": "Binary search practice",
+                "content": "Binary search halves a sorted list.",
+            },
+        )
+        task = client.post(
+            "/tasks",
+            json={
+                "title": "Practice binary search in Python",
+                "due_date": "2026-11-22",
+                "status": "todo",
+            },
+        )
+        interest = client.post("/interests", json={"name": "python"})
+        assert note.status_code == 201
+        assert task.status_code == 201
+        assert interest.status_code == 201
+        task_id = task.json()["id"]
+        first = client.post("/recommendations/generate")
+        assert first.status_code == 200, first.text
+        study = [
+            card for card in first.json()["recommendations"] if card["type"] == "study"
+        ]
+        assert study and study[0]["action"]["target"] == task_id
+        done = client.patch(f"/tasks/{task_id}", json={"status": "done"})
+        assert done.status_code == 200
+        second = client.post("/recommendations/generate")
+        assert second.status_code == 200, second.text
+        targets = [
+            card["action"]["target"]
+            for card in second.json()["recommendations"]
+            if card["type"] == "study"
+        ]
+        assert task_id not in targets
+        empty = client.post(
+            "/recommendations/generate",
+            headers={"X-Dev-User": "dev-user-2"},
+        )
+        assert empty.status_code == 200
+        assert empty.json() == {"recommendations": []}
+
+
 def test_health_ok(test_engine: Engine) -> None:
     with TestClient(create_app(test_engine)) as client:
         response = client.get("/health")

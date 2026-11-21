@@ -297,17 +297,17 @@ HTTP 200
 From `backend/`, with the virtualenv active and `delphi_test` created:
 
 ```bash
-pytest test_main.py tests/test_retrieval.py test_recommendations_api.py
+pytest test_main.py tests/test_retrieval.py tests/test_fixture_checks.py test_recommendations_api.py
 ```
 
-That rebuilds `delphi_test` from the migration, then checks persistence, completion, deletion, interest deactivation, the second user, search, and health. `test_recommendations_api.py` does not use PostgreSQL. Pytest never connects to the `delphi` database.
+That rebuilds `delphi_test` from the migration, then checks persistence, completion, deletion, interest deactivation, the second user, search, recommendations from saved rows, the fictional notes, and health. `test_recommendations_api.py` does not use PostgreSQL. Pytest never connects to the `delphi` database.
 
-`pytest` with no paths also collects draft files under `Maddie/` and `app/services/recommendations/test_engine.py`. Those files are not this API check. The engine file imports `backend.app` and is run from the repository root, not from `backend/`.
+`pytest` with no paths also collects `app/services/recommendations/test_engine.py`. That file imports `backend.app` and is run from the repository root, not from `backend/`. `tests/test_import_notes.py` is skipped: `POST /notes/import` is not a registered route.
 
 A pass looks like this:
 
 ```text
-22 passed, 1 warning
+55 passed, 1 warning
 ```
 
 The warning says Starlette would prefer the `httpx2` package. The tests use `httpx`, and they still pass.
@@ -361,7 +361,7 @@ curl -s http://localhost:8000/interests
 echo
 ```
 
-The note request is `{"detail":"Note not found"}`. `GET /notes` no longer includes that note. `GET /tasks` still includes `Demo task` with `"status":"done"`, plus the seeded tasks `Practice binary search in Python` and `Review linear regression residuals`. `GET /interests` still includes `astronomy`, plus `Python` and `Data science` from the seed. A completed task remains in `GET /tasks` and is absent from `list_active_tasks`.
+The note request is `{"detail":"Note not found"}`. `GET /notes` no longer includes that note. `GET /tasks` still includes `Demo task` with `"status":"done"`, plus the seeded tasks `Practice binary search in Python` and `Review linear regression residuals`. `GET /interests` still includes `astronomy`, plus `Python` and `data-science` from the seed. A completed task remains in `GET /tasks` and is absent from `list_active_tasks`.
 
 7. Show that the second user sees none of it:
 
@@ -401,6 +401,6 @@ CORS allows only `http://localhost:3000`. Allowed methods include GET, POST, PAT
 
 Search is `GET /notes/search`. It is registered before `GET /notes/{id}`. Each result has `note_id`, `user_id`, `title`, `excerpt`, `score`, and `source_type`.
 
-The recommendation code is in `app/services/recommendations/` and `app/api/recommendations.py`. `create_app` does not mount that router, and nothing sets `recommendation_sources`. `POST /recommendations/generate` is not served. The API does not substitute fixture recommendations.
+`POST /recommendations/generate` reads the caller's saved tasks, interests, and notes, plus `shared/fixtures/resources.json`. It does not save recommendations and it does not substitute fixture tasks or notes. A completed task is left out of the study card. `dev-user-2` gets `{"recommendations":[]}`. `X-Dev-User` is still not login.
 
 Also not built: login, recommendations stored in the database, notification tables, an `/api/v1` prefix, and custom error bodies beyond the status codes above.

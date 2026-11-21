@@ -4,18 +4,20 @@
 Safe to run more than once: it first reads GET /notes and skips any note whose
 title already exists for the user (the API only lists the dev user's notes).
 
-Usage (from the repo root, with the API running):
-    python load_notes.py
-    python load_notes.py --base-url http://localhost:8000 --fixtures shared/fixtures
-    python load_notes.py --dry-run
-    python load_notes.py --header "X-Dev-User: dev-user-2"
+Usage (from backend/, with the API running):
+    python -m app.services.imports.load_notes
+    python -m app.services.imports.load_notes --dry-run
+    python -m app.services.imports.load_notes --header "X-Dev-User: dev-user-2"
 """
+
 import argparse
 import json
 import sys
 import urllib.error
 import urllib.request
 from pathlib import Path
+
+DEFAULT_NOTES = Path(__file__).resolve().parents[3] / "test_data" / "notes"
 
 
 def parse_note(path: Path) -> dict:
@@ -30,7 +32,12 @@ def parse_note(path: Path) -> dict:
     content = "\n".join(body).strip()
     if not title:
         raise ValueError(f"{path.name}: empty title")
-    return {"title": title, "content": content, "source_type": "manual"}
+    return {
+        "title": title,
+        "content": content,
+        "source_type": "manual",
+        "source_path": path.name,
+    }
 
 
 def call(method: str, url: str, headers: dict, payload: dict | None = None):
@@ -50,7 +57,7 @@ def norm(title: str) -> str:
 def main() -> int:
     ap = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     ap.add_argument("--base-url", default="http://localhost:8000")
-    ap.add_argument("--fixtures", default="shared/fixtures")
+    ap.add_argument("--fixtures", default=str(DEFAULT_NOTES))
     ap.add_argument("--header", action="append", default=[], metavar="'Name: value'",
                     help="extra request header (repeatable)")
     ap.add_argument("--dry-run", action="store_true", help="show what would be posted, post nothing")

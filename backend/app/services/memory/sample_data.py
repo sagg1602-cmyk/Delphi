@@ -1,6 +1,5 @@
-"""Loads Maddie's sample notes into the notes table for tests and the demo."""
+"""Loads the fictional notes in backend/test_data into the notes table."""
 
-import importlib.util
 import os
 from pathlib import Path
 
@@ -9,22 +8,14 @@ from sqlalchemy import text
 from sqlalchemy.engine import make_url
 
 from app.repositories import create_note
+from app.services.imports.markdown_notes import load_folder
 
 BACKEND_DIR = Path(__file__).resolve().parents[3]
-MADDIE_DIR = BACKEND_DIR / "Maddie" / "Week 1"
-
-
-def _maddie_loader():
-    spec = importlib.util.spec_from_file_location(
-        "maddie_note_loader", MADDIE_DIR / "NoteReqDraft.py"
-    )
-    module = importlib.util.module_from_spec(spec)
-    spec.loader.exec_module(module)
-    return module
+NOTES_DIR = BACKEND_DIR / "test_data" / "notes"
 
 
 def load_sample_notes():
-    notes, errors = _maddie_loader().load_folder(str(MADDIE_DIR / "notes"))
+    notes, errors = load_folder(NOTES_DIR)
     if errors:
         raise RuntimeError(f"Some sample notes failed to load: {errors}")
     return [note.to_dict() for note in notes]
